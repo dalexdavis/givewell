@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const ImpactMap = dynamic(() => import("@/app/components/ImpactMap"), { ssr: false });
 
 const charities = [
   { id: "1", name: "Clean Water Fund", category: "Humanitarian", rating: "A", impact: "Provides clean water to 2M+ people", country: "Global", logo: "💧" },
@@ -92,8 +95,13 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Charity Ratings */}
-        <section aria-label="Charity ratings">
+        {/* Global Impact Map */}
+        <section aria-label="Global impact map">
+          <h2 className="text-lg font-semibold text-slate-700 mb-4">Global Impact Map</h2>
+          <ImpactMap />
+        </section>
+
+        {/* Charity Ratings */}        <section aria-label="Charity ratings">
           <h2 className="text-lg font-semibold text-slate-700 mb-4">Charity Ratings</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {charities.map((c) => (

@@ -1,4 +1,27 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-left {
+  animation: scroll-left 40s linear infinite;
+}
+
+.animate-scroll-left-slow {
+  animation: scroll-left 55s linear infinite;
+}
+
+.animate-scroll-left-fast {
+  animation: scroll-left 28s linear infinite;
+}
 
 body {
   font-family: var(--font-geist-sans), Arial, sans-serif;

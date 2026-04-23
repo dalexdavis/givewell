@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import DonateModal from "@/app/components/DonateModal";
+import { createPortal } from "react-dom";
 
 const charities: Record<string, {
   name: string; logo: string; category: string; country: string; rating: string;
@@ -43,14 +46,11 @@ const ratingColor: Record<string, string> = {
 
 export default function CharityPage({ params }: { params: { id: string } }) {
   const charity = charities[params.id] ?? charities["1"];
+  const [donateOpen, setDonateOpen] = useState(false);
+  const [docModalOpen, setDocModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-
-      {/* Demo banner */}
-      <div className="w-full bg-blue-600 text-white text-center text-xs py-2 font-medium tracking-wide">
-        ⚡ DEMO MODE — This is a preview of the GiveWell platform. Data is simulated.
-      </div>
 
       {/* Nav */}
       <header className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -78,8 +78,21 @@ export default function CharityPage({ params }: { params: { id: string } }) {
               <span>🌍 {charity.impact}</span>
               <span>🔗 {charity.website}</span>
             </div>
+            <button
+              onClick={() => setDonateOpen(true)}
+              className="mt-4 self-center sm:self-start inline-block rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-6 py-2.5 transition-colors shadow-sm"
+            >
+              💙 Donate Now
+            </button>
           </div>
         </div>
+
+        {donateOpen && (
+          <DonateModal
+            charity={{ name: charity.name, logo: charity.logo, category: charity.category }}
+            onClose={() => setDonateOpen(false)}
+          />
+        )}
 
         {/* State Tracking */}
         <section aria-label="State tracking">
@@ -141,7 +154,7 @@ export default function CharityPage({ params }: { params: { id: string } }) {
                   )}
                   <button
                     className="text-xs text-blue-600 hover:underline"
-                    onClick={() => alert("Demo mode — document download not available.")}
+                    onClick={() => setDocModalOpen(true)}
                   >
                     View
                   </button>
@@ -152,6 +165,51 @@ export default function CharityPage({ params }: { params: { id: string } }) {
         </section>
 
       </main>
+
+      {docModalOpen && createPortal(
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          style={{ zIndex: 99999 }}
+          onClick={() => setDocModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Document access restricted"
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 flex flex-col gap-5 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center gap-3">
+              <span className="text-5xl">🔒</span>
+              <p className="text-lg font-bold text-slate-800">Institutional Access Only</p>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Document access is available exclusively to verified institutional accounts.
+                Upgrade your plan to view, download, and audit charity documents.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700 font-medium">
+              Institutional accounts get full document access, audit trails, and priority support.
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <button
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl py-2.5 text-sm transition-colors"
+                onClick={() => setDocModalOpen(false)}
+              >
+                Learn about institutional plans
+              </button>
+              <button
+                className="w-full text-slate-400 hover:text-slate-600 text-sm py-1 transition-colors"
+                onClick={() => setDocModalOpen(false)}
+              >
+                Maybe later
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

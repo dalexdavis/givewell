@@ -1,35 +1,122 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const CHARITIES = [
+  { name: "Clean Water Fund",  logo: "💧", category: "Humanitarian",   rating: "A", country: "Global"        },
+  { name: "EduReach",          logo: "📚", category: "Education",      rating: "A", country: "Africa"        },
+  { name: "MediCare Global",   logo: "🏥", category: "Health",         rating: "B", country: "Asia"          },
+  { name: "GreenEarth",        logo: "🌱", category: "Environment",    rating: "B", country: "South America" },
+  { name: "FoodBridge",        logo: "🍞", category: "Hunger",         rating: "C", country: "USA"           },
+  { name: "ShelterNow",        logo: "🏠", category: "Housing",        rating: "C", country: "Middle East"   },
+  { name: "HopeLight",         logo: "🕯️", category: "Mental Health",  rating: "D", country: "Europe"        },
+  { name: "AnimalAid",         logo: "🐾", category: "Animal Welfare", rating: "E", country: "Global"        },
+  { name: "OceanGuard",        logo: "🌊", category: "Environment",    rating: "A", country: "Pacific"       },
+  { name: "LiteracyFirst",     logo: "✏️", category: "Education",      rating: "B", country: "South Asia"    },
+  { name: "RefugeeAid",        logo: "🤝", category: "Humanitarian",   rating: "A", country: "Europe"        },
+  { name: "SolarVillage",      logo: "☀️", category: "Energy",         rating: "B", country: "Sub-Saharan"   },
+  { name: "ChildSafe",         logo: "👶", category: "Child Welfare",  rating: "A", country: "Global"        },
+  { name: "HarvestHope",       logo: "🌾", category: "Hunger",         rating: "C", country: "East Africa"   },
+  { name: "MindBridge",        logo: "🧠", category: "Mental Health",  rating: "B", country: "North America" },
+  { name: "WildRoots",         logo: "🦁", category: "Conservation",   rating: "A", country: "Africa"        },
+];
+
+const RATING_COLOR: Record<string, string> = {
+  A: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  B: "bg-blue-100 text-blue-700 border-blue-200",
+  C: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  D: "bg-orange-100 text-orange-700 border-orange-200",
+  E: "bg-red-100 text-red-700 border-red-200",
+};
+
+// Duplicate each row for seamless infinite loop
+const ROW1 = [...CHARITIES.slice(0, 8),  ...CHARITIES.slice(0, 8)];
+const ROW2 = [...CHARITIES.slice(8, 16), ...CHARITIES.slice(8, 16)];
+
+function CharityCard({ c }: { c: typeof CHARITIES[0] }) {
+  return (
+    <div className="flex-shrink-0 w-44 bg-white border border-slate-500 rounded-2xl px-4 py-4 flex flex-col gap-2 shadow-sm select-none">
+      <div className="flex items-center justify-between">
+        <span className="text-3xl">{c.logo}</span>
+        <span className={`text-xs font-bold border rounded-lg px-2 py-0.5 ${RATING_COLOR[c.rating]}`}>
+          {c.rating}
+        </span>
+      </div>
+      <p className="text-sm font-semibold text-slate-800 leading-tight">{c.name}</p>
+      <p className="text-xs text-slate-400">{c.category}</p>
+      <p className="text-xs text-slate-300">{c.country}</p>
+    </div>
+  );
+}
 
 export default function Home() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [count, setCount] = useState<number | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  useEffect(() => {
+    fetch("/api/waitlist").then(r => r.json()).then(d => setCount(d.count));
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError("Please enter a valid email address.");
       return;
     }
     setError("");
-    setSubmitted(true);
+    const res = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    if (res.ok) {
+      setSubmitted(true);
+      setCount(c => (c ?? 0) + 1);
+    } else {
+      const data = await res.json();
+      setError(data.error === "Already registered" ? "You're already on the list." : "Something went wrong. Try again.");
+    }
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex flex-col items-center justify-center px-6 py-20">
+    <main className="relative min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex flex-col items-center justify-center px-6 py-20 overflow-hidden">
 
-      {/* Soft decorative circle */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[-80px] right-[-80px] w-[420px] h-[420px] rounded-full bg-blue-100 opacity-50 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-60px] left-[-60px] w-[320px] h-[320px] rounded-full bg-sky-100 opacity-60 blur-3xl"
-      />
+      {/* ── Scrolling card background — all rows left-to-right ── */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col justify-center gap-5 opacity-[0.80]">
+        <div className="overflow-hidden">
+          <div className="flex gap-4 animate-scroll-left" style={{ width: "max-content" }}>
+            {ROW1.map((c, i) => <CharityCard key={i} c={c} />)}
+          </div>
+        </div>
+        <div className="overflow-hidden">
+          <div className="flex gap-4 animate-scroll-left-slow" style={{ width: "max-content" }}>
+            {ROW2.map((c, i) => <CharityCard key={i} c={c} />)}
+          </div>
+        </div>
+        <div className="overflow-hidden">
+          <div className="flex gap-4 animate-scroll-left-fast" style={{ width: "max-content", animationDelay: "-10s" }}>
+            {ROW1.map((c, i) => <CharityCard key={i} c={c} />)}
+          </div>
+        </div>
+        <div className="overflow-hidden">
+          <div className="flex gap-4 animate-scroll-left" style={{ width: "max-content" }}>
+            {ROW1.map((c, i) => <CharityCard key={i} c={c} />)}
+          </div>
+        </div>
+        <div className="overflow-hidden">
+          <div className="flex gap-4 animate-scroll-left-slow" style={{ width: "max-content" }}>
+            {ROW2.map((c, i) => <CharityCard key={i} c={c} />)}
+          </div>
+        </div>
+      </div>
 
+      {/* ── Soft gradient overlay to keep cards subtle ── */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-50/80 via-white/50 to-blue-50/80" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-sky-50/70 via-transparent to-blue-50/70" />
+
+      {/* ── Foreground content ── */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-xl w-full gap-8">
 
         {/* Badge */}
@@ -40,7 +127,7 @@ export default function Home() {
 
         {/* Brand */}
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-6xl font-bold tracking-tight text-slate-800">
+          <h1 className="text-8xl font-bold tracking-tight text-slate-800">
             Give<span className="text-blue-600">Well</span>
           </h1>
           <p className="text-lg text-slate-500 max-w-md leading-relaxed">
@@ -86,8 +173,13 @@ export default function Home() {
         {/* Divider */}
         <div className="w-12 h-px bg-slate-200" />
 
-        {/* Newsletter */}
+        {/* Waitlist */}
         <div className="w-full max-w-md flex flex-col gap-3">
+          {count !== null && count > 0 && (
+            <p className="text-blue-600 text-lg font-medium text-center">
+              🎉 {count} {count === 1 ? "person has" : "people have"} joined the waitlist — add your name too.
+            </p>
+          )}
           <p className="text-slate-500 text-sm">
             Join the waitlist — be the first to know when we launch.
           </p>
