@@ -39,3 +39,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # givewell
 GiveWell is a platform that improves transparency and ratings for small charities, helping people trust where their money goes and make clearer giving decisions ultimately increasing donations and impact on society.
 >>>>>>> f106cf2a8122c91cbde25cf4f9d6ab90b4eaa764
+
+this is a demo website for the idea
